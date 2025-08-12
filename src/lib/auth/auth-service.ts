@@ -469,16 +469,13 @@ export class AuthService {
       await prisma.auditLog.create({
         data: {
           userId: auditData.userId,
-          userEmail: auditData.userEmail,
           action: auditData.action,
-          resource: auditData.resource,
-          resourceId: auditData.resourceId,
-          details: auditData.details,
-          ipAddress: auditData.ipAddress,
-          userAgent: auditData.userAgent,
-          branchId: auditData.branchId,
           table_name: auditData.resource,
           record_id: auditData.resourceId || auditData.userId || 'N/A',
+          old_values: auditData.details?.oldValues || null,
+          new_values: auditData.details?.newValues || auditData.details || null,
+          ipAddress: auditData.ipAddress,
+          userAgent: auditData.userAgent,
         }
       });
     } catch (error) {
