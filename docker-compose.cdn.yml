@@ -1,0 +1,70 @@
+# CDN and Performance Infrastructure for Atlas Platform
+version: '3.8'
+
+services:
+  # Nginx CDN proxy for static assets
+  cdn-proxy:
+    image: nginx:alpine
+    container_name: atlas-cdn-proxy
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/cdn.conf:/etc/nginx/nginx.conf
+      - ./public:/var/www/html/static:ro
+      - cdn_cache:/var/cache/nginx
+    environment:
+      - NGINX_WORKER_PROCESSES=auto
+      - NGINX_WORKER_CONNECTIONS=1024
+    networks:
+      - atlas-network
+    depends_on:
+      - atlas-app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cdn.rule=Host(`cdn.atlas.local`)"
+      - "traefik.http.routers.cdn.entrypoints=web"
+
+  # Image optimization service
+  image-optimizer:
+    image: h2non/imaginary:latest
+    container_name: atlas-image-optimizer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    command: >
+      -enable-url-source
+      -allowed-origins http://localhost:3000,http://localhost:3001
+      -max-allowed-size 25000000
+      -return-size
+    volumes:
+      - ./public:/mnt/data:ro
+    networks:
+      - atlas-network
+    environment:
+      - PORT=9000
+
+  # Asset compression and optimization
+  asset-optimizer:
+    build:
+      context: .
+      dockerfile: docker/asset-optimizer.Dockerfile
+    container_name: atlas-asset-optimizer
+    volumes:
+      - ./.next:/app/.next
+      - ./public:/app/public
+      - optimized_assets:/app/dist
+    environment:
+      - NODE_ENV=production
+    networks:
+      - atlas-network
+
+volumes:
+  cdn_cache:
+    driver: local
+  optimized_assets:
+    driver: local
+
+networks:
+  atlas-network:
+    external: true

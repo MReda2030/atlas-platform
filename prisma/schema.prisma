@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                                            String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email                                         String        @unique @db.VarChar
+  passwordHash                                  String        @map("password_hash") @db.VarChar
+  role                                          UserRole      @default(MEDIA_BUYER)
+  name                                          String        @db.VarChar
+  branchId                                      String?       @map("branch_id") @db.Uuid
+  isActive                                      Boolean?      @default(true) @map("is_active")
+  lastLoginAt                                   DateTime?     @map("last_login") @db.Timestamp(6)
+  createdAt                                     DateTime?     @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt                                     DateTime?     @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  auditLogs                                     AuditLog[]    @relation("UserAuditLogs")
+  mediaReports                                  MediaReport[]
+  media_reports_media_reports_created_byTousers MediaReport[] @relation("media_reports_created_byTousers")
+  media_reports_media_reports_updated_byTousers MediaReport[] @relation("media_reports_updated_byTousers")
+  salesReports                                  SalesReport[]
+  sales_reports_sales_reports_created_byTousers SalesReport[] @relation("sales_reports_created_byTousers")
+  sales_reports_sales_reports_updated_byTousers SalesReport[] @relation("sales_reports_updated_byTousers")
+  sessions                                      UserSession[]
+  branch                                        Branch?       @relation(fields: [branchId], references: [id], onUpdate: NoAction, map: "users_branch_fkey")
+
+  @@map("users")
+}
+
+model UserSession {
+  id        String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  token     String    @unique @db.VarChar
+  expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
+  ipAddress String?   @map("ip_address") @db.VarChar
+  userAgent String?   @map("user_agent")
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sessions_user_fkey")
+
+  @@index([expiresAt], map: "idx_user_sessions_expires")
+  @@index([userId], map: "idx_user_sessions_user")
+  @@map("user_sessions")
+}
+
+model AuditLog {
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  table_name String    @db.VarChar
+  record_id  String    @db.Uuid
+  action     String    @db.VarChar
+  old_values Json?
+  new_values Json?
+  userId     String?   @map("user_id") @db.Uuid
+  timestamp  DateTime? @default(now()) @db.Timestamp(6)
+  ipAddress  String?   @map("ip_address") @db.VarChar
+  userAgent  String?   @map("user_agent")
+  user       User?     @relation("UserAuditLogs", fields: [userId], references: [id], onUpdate: NoAction, map: "audit_logs_user_fkey")
+
+  @@index([table_name, record_id], map: "idx_audit_logs_table_record")
+  @@index([timestamp], map: "idx_audit_logs_timestamp")
+  @@map("audit_logs")
+}
+
+model Branch {
+  id           String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name         String        @db.VarChar
+  code         String        @unique @db.VarChar
+  createdAt    DateTime?     @default(now()) @map("created_at") @db.Timestamp(6)
+  updated_at   DateTime?     @default(now()) @db.Timestamp(6)
+  mediaReports MediaReport[]
+  salesAgents  SalesAgent[]
+  salesReports SalesReport[]
+  users        User[]
+
+  @@map("branches")
+}
+
+model SalesAgent {
+  id             String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  agentNumber    String           @unique @map("agent_number") @db.VarChar
+  name           String?          @db.VarChar
+  branchId       String?          @map("branch_id") @db.Uuid
+  isActive       Boolean?         @default(true) @map("is_active")
+  createdAt      DateTime?        @default(now()) @map("created_at") @db.Timestamp(6)
+  updated_at     DateTime?        @default(now()) @db.Timestamp(6)
+  mediaAgentData MediaAgentData[]
+  branch         Branch?          @relation(fields: [branchId], references: [id], onUpdate: NoAction, map: "sales_agents_branch_fkey")
+  salesReports   SalesReport[]
+
+  @@map("sales_agents")
+}
+
+model DestinationCountry {
+  id               String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name             String            @db.VarChar
+  code             String            @unique @db.VarChar
+  created_at       DateTime?         @default(now()) @db.Timestamp(6)
+  campaignDetails  CampaignDetail[]
+  dealDestinations DealDestination[]
+
+  @@map("destination_countries")
+}
+
+model TargetCountry {
+  id               String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name             String             @db.VarChar
+  code             String             @unique @db.VarChar
+  created_at       DateTime?          @default(now()) @db.Timestamp(6)
+  mediaCountryData MediaCountryData[]
+  salesCountryData SalesCountryData[]
+
+  @@map("target_countries")
+}
+
+model AdvertisingPlatform {
+  id              String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name            String           @unique @db.VarChar
+  created_at      DateTime?        @default(now()) @db.Timestamp(6)
+  campaignDetails CampaignDetail[]
+
+  @@map("advertising_platforms")
+}
+
+model MediaReport {
+  id                                    String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  date                                  DateTime           @db.Date
+  branchId                              String?            @map("branch_id") @db.Uuid
+  mediaBuyerId                          String?            @map("media_buyer_id") @db.Uuid
+  total_spend                           Decimal?           @db.Decimal(10, 2)
+  createdAt                             DateTime?          @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt                             DateTime?          @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  createdBy                             String?            @map("created_by") @db.Uuid
+  updatedBy                             String?            @map("updated_by") @db.Uuid
+  mediaCountryData                      MediaCountryData[]
+  branch                                Branch?            @relation(fields: [branchId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "media_reports_branch_fkey")
+  mediaBuyer                            User?              @relation(fields: [mediaBuyerId], references: [id], onUpdate: NoAction, map: "media_reports_buyer_fkey")
+  users_media_reports_created_byTousers User?              @relation("media_reports_created_byTousers", fields: [createdBy], references: [id], onUpdate: NoAction)
+  users_media_reports_updated_byTousers User?              @relation("media_reports_updated_byTousers", fields: [updatedBy], references: [id], onUpdate: NoAction)
+
+  @@index([branchId], map: "idx_media_reports_branch")
+  @@index([date], map: "idx_media_reports_date")
+  @@map("media_reports")
+}
+
+model MediaCountryData {
+  id              String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  reportId        String           @map("report_id") @db.Uuid
+  targetCountryId String?          @map("target_country_id") @db.Uuid
+  country_spend   Decimal?         @db.Decimal(10, 2)
+  createdAt       DateTime?        @default(now()) @map("created_at") @db.Timestamp(6)
+  mediaAgentData  MediaAgentData[]
+  targetCountry   TargetCountry?   @relation(fields: [targetCountryId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "media_country_country_fkey")
+  report          MediaReport      @relation(fields: [reportId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "media_country_report_fkey")
+
+  @@map("media_country_data")
+}
+
+model MediaAgentData {
+  id              String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  countryDataId   String           @map("country_data_id") @db.Uuid
+  salesAgentId    String?          @map("sales_agent_id") @db.Uuid
+  campaignCount   Int              @map("campaign_count")
+  agent_spend     Decimal?         @db.Decimal(10, 2)
+  createdAt       DateTime?        @default(now()) @map("created_at") @db.Timestamp(6)
+  campaignDetails CampaignDetail[]
+  salesAgent      SalesAgent?      @relation(fields: [salesAgentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "media_agent_agent_fkey")
+  countryData     MediaCountryData @relation(fields: [countryDataId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "media_agent_country_fkey")
+
+  @@map("media_agent_data")
+}
+
+model CampaignDetail {
+  id                   String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  agentDataId          String               @map("agent_data_id") @db.Uuid
+  destinationCountryId String?              @map("destination_country_id") @db.Uuid
+  amount               Decimal              @db.Decimal(10, 2)
+  platformId           String?              @map("platform_id") @db.Uuid
+  campaignNumber       Int                  @map("campaign_number")
+  notes                String?
+  createdAt            DateTime?            @default(now()) @map("created_at") @db.Timestamp(6)
+  agentData            MediaAgentData       @relation(fields: [agentDataId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "campaign_agent_data_fkey")
+  destinationCountry   DestinationCountry?  @relation(fields: [destinationCountryId], references: [id], onUpdate: NoAction, map: "campaign_destination_fkey")
+  platform             AdvertisingPlatform? @relation(fields: [platformId], references: [id], onUpdate: NoAction, map: "campaign_platform_fkey")
+
+  @@unique([agentDataId, campaignNumber], map: "campaign_details_unique_campaign")
+  @@map("campaign_details")
+}
+
+model SalesReport {
+  id                                    String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  date                                  DateTime           @db.Date
+  branchId                              String?            @map("branch_id") @db.Uuid
+  salesAgentId                          String?            @map("sales_agent_id") @db.Uuid
+  mediaBuyerId                          String?            @map("media_buyer_id") @db.Uuid
+  total_deals                           Int?               @default(0)
+  total_whatsapp                        Int?               @default(0)
+  createdAt                             DateTime?          @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt                             DateTime?          @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  createdBy                             String?            @map("created_by") @db.Uuid
+  updatedBy                             String?            @map("updated_by") @db.Uuid
+  salesCountryData                      SalesCountryData[]
+  salesAgent                            SalesAgent?        @relation(fields: [salesAgentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sales_reports_agent_fkey")
+  branch                                Branch?            @relation(fields: [branchId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sales_reports_branch_fkey")
+  mediaBuyer                            User?              @relation(fields: [mediaBuyerId], references: [id], onUpdate: NoAction, map: "sales_reports_buyer_fkey")
+  users_sales_reports_created_byTousers User?              @relation("sales_reports_created_byTousers", fields: [createdBy], references: [id], onUpdate: NoAction)
+  users_sales_reports_updated_byTousers User?              @relation("sales_reports_updated_byTousers", fields: [updatedBy], references: [id], onUpdate: NoAction)
+
+  @@index([salesAgentId], map: "idx_sales_reports_agent")
+  @@index([date], map: "idx_sales_reports_date")
+  @@map("sales_reports")
+}
+
+model SalesCountryData {
+  id               String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  reportId         String            @map("report_id") @db.Uuid
+  targetCountryId  String?           @map("target_country_id") @db.Uuid
+  dealsClosed      Int               @map("deals_closed")
+  whatsappMessages Int               @map("whatsapp_messages")
+  qualityRating    QualityRating     @map("quality_rating")
+  createdAt        DateTime?         @default(now()) @map("created_at") @db.Timestamp(6)
+  dealDestinations DealDestination[]
+  targetCountry    TargetCountry?    @relation(fields: [targetCountryId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sales_country_country_fkey")
+  report           SalesReport       @relation(fields: [reportId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sales_country_report_fkey")
+
+  @@map("sales_country_data")
+}
+
+model DealDestination {
+  id                   String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  countryDataId        String              @map("country_data_id") @db.Uuid
+  destinationCountryId String?             @map("destination_country_id") @db.Uuid
+  dealNumber           Int                 @map("deal_number")
+  notes                String?
+  createdAt            DateTime?           @default(now()) @map("created_at") @db.Timestamp(6)
+  countryData          SalesCountryData    @relation(fields: [countryDataId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "deal_country_data_fkey")
+  destinationCountry   DestinationCountry? @relation(fields: [destinationCountryId], references: [id], onUpdate: NoAction, map: "deal_destination_fkey")
+
+  @@unique([countryDataId, dealNumber], map: "deal_destinations_unique_deal")
+  @@map("deal_destinations")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MEDIA_BUYER
+
+  @@map("user_role")
+}
+
+enum QualityRating {
+  below_standard
+  standard
+  good
+  excellent
+  best_quality
+
+  @@map("quality_rating")
+}
