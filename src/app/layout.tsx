@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   title: "Atlas Travel Platform",
   description: "Performance Marketing Platform for Atlas Travel Business",
   keywords: ["travel", "marketing", "performance", "analytics"],
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -25,6 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+      </head>
       <body className={`${inter.variable} font-sans antialiased bg-white dark:bg-gray-950`}>
         <PerformanceProvider>
           <QueryProvider>

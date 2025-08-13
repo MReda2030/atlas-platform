@@ -5,11 +5,11 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Insert Branches
-INSERT INTO branches (id, name, code, created_at, updated_at) VALUES
-(uuid_generate_v4(), '4 Seasons', '4SEASONS', NOW(), NOW()),
-(uuid_generate_v4(), 'Amazonn', 'AMAZONN', NOW(), NOW()),
-(uuid_generate_v4(), 'Fantastic', 'FANTASTIC', NOW(), NOW()),
-(uuid_generate_v4(), 'Skyline', 'SKYLINE', NOW(), NOW())
+INSERT INTO branches (id, name, code, created_at) VALUES
+(uuid_generate_v4(), '4 Seasons', '4SEASONS', NOW()),
+(uuid_generate_v4(), 'Amazonn', 'AMAZONN', NOW()),
+(uuid_generate_v4(), 'Fantastic', 'FANTASTIC', NOW()),
+(uuid_generate_v4(), 'Skyline', 'SKYLINE', NOW())
 ON CONFLICT (code) DO NOTHING;
 
 -- Insert Destination Countries
@@ -47,14 +47,13 @@ ON CONFLICT (name) DO NOTHING;
 
 -- Insert Sales Agents
 -- 4 Seasons agents (21-30)
-INSERT INTO sales_agents (id, agent_number, name, branch_id, is_active, created_at, updated_at)
+INSERT INTO sales_agents (id, agent_number, name, branch_id, is_active, created_at)
 SELECT 
     uuid_generate_v4(), 
     '21', 
     'Agent 21', 
     b.id, 
     true, 
-    NOW(), 
     NOW()
 FROM branches b WHERE b.name = '4 Seasons'
 ON CONFLICT (agent_number) DO NOTHING;

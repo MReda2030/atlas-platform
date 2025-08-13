@@ -71,12 +71,12 @@ export default function SalesReportForm({ onSubmit, onCancel, showError }: Sales
       setCurrentStep(savedDataAvailable.data.currentStep);
       setSavedDataAvailable(null);
     }
-  }, []);
+  }, [savedDataAvailable]);
 
   const handleDiscardSaved = useCallback(() => {
     clearAutoSave();
     setSavedDataAvailable(null);
-  }, []);
+  }, [clearAutoSave]);
 
   const handleStepSubmit = useCallback((stepData: any) => {
     setFormData(prev => ({ ...prev, ...stepData }));
@@ -96,7 +96,7 @@ export default function SalesReportForm({ onSubmit, onCancel, showError }: Sales
         onSubmit?.(formData);
         break;
     }
-  }, []);
+  }, [currentStep, formData, clearAutoSave, onSubmit]);
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -243,7 +243,7 @@ function AgentSelectionStep({ onSubmit, initialData, showError }: any) {
       return;
     }
     onSubmit({ date, branchId, salesAgentId });
-  }, []);
+  }, [date, branchId, salesAgentId, showError, onSubmit]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -351,7 +351,7 @@ function CountryDataStep({ onSubmit, initialData, setCurrentStep, showError }: a
     
     setShowAddCountryDropdown(false);
     setSelectedCountryToAdd('');
-  }, []);
+  }, [selectedCountryToAdd, activeCountries, showError]);
 
   const cancelAddCountry = () => {
     setShowAddCountryDropdown(false);

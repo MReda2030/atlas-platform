@@ -1,0 +1,22 @@
+{
+  "name": "Atlas Travel Platform",
+  "short_name": "Atlas Platform",
+  "description": "Performance Marketing Platform for Atlas Travel Business",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["business", "productivity", "travel"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32 48x48",
+      "type": "image/x-icon",
+      "purpose": "any maskable"
+    }
+  ]
+}

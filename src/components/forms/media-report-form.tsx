@@ -67,12 +67,12 @@ export default function MediaReportForm({ onSubmit, onCancel, showError }: Media
       setCurrentStep(savedDataAvailable.data.currentStep);
       setSavedDataAvailable(null);
     }
-  }, []);
+  }, [savedDataAvailable]);
 
   const handleDiscardSaved = useCallback(() => {
     clearAutoSave();
     setSavedDataAvailable(null);
-  }, []);
+  }, [clearAutoSave]);
 
   const handleStepSubmit = useCallback((stepData: any) => {
     setFormData(prev => ({ ...prev, ...stepData }));
@@ -95,7 +95,7 @@ export default function MediaReportForm({ onSubmit, onCancel, showError }: Media
         onSubmit?.(formData);
         break;
     }
-  }, []);
+  }, [currentStep, formData, clearAutoSave, onSubmit]);
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -199,7 +199,7 @@ function MetadataStep({ onSubmit, initialData }: any) {
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({ date, branchId });
-  }, []);
+  }, [date, branchId, onSubmit]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
