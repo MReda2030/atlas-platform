@@ -5,9 +5,7 @@ import { lazy, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Lazy load the heavy form component
-const MediaReportForm = lazy(() => import('../media-report-form').then(module => ({
-  default: module.MediaReportForm
-})));
+const MediaReportForm = lazy(() => import('../media-report-form'));
 
 // Lightweight loading skeleton specifically for forms
 const FormLoadingSkeleton = () => (

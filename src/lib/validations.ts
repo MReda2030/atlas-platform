@@ -1,4 +1,4 @@
-import { z } from "./zod-placeholder";
+import { z } from "zod";
 
 // Media Report Validation Schemas
 export const mediaReportSchema = z.object({

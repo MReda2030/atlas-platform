@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import MediaReportForm from '@/components/forms/media-report-form';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';

@@ -47,14 +47,10 @@ export default function UsersManagementPage() {
     password: '',
     confirmPassword: '',
     name: '',
-    role: UserRole.VIEWER,
+    role: UserRole.MEDIA_BUYER,
     branchId: '',
     agentNumber: '',
   });
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
 
   const fetchUsers = async () => {
     try {
@@ -78,6 +74,10 @@ export default function UsersManagementPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +123,7 @@ export default function UsersManagementPage() {
         password: '',
         confirmPassword: '',
         name: '',
-        role: UserRole.VIEWER,
+        role: UserRole.MEDIA_BUYER,
         branchId: '',
         agentNumber: '',
       });
@@ -174,7 +174,7 @@ export default function UsersManagementPage() {
       [UserRole.ANALYST]: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200',
       [UserRole.VIEWER]: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
     };
-    return colors[role] || colors[UserRole.VIEWER];
+    return colors[role] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
   };
 
   const formatRole = (role: UserRole) => {

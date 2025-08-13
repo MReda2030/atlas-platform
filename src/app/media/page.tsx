@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import DataGrid from '@/components/ui/data-grid';
@@ -79,7 +79,7 @@ interface FlattenedReport {
   updatedAt: string;
 }
 
-export default function MediaReportsPage() {
+function MediaReportsContent() {
   const { user, isAdmin } = useAuth();
   const [reports, setReports] = useState<MediaReport[]>([]);
   const [flattenedReports, setFlattenedReports] = useState<FlattenedReport[]>([]);
@@ -641,5 +641,19 @@ export default function MediaReportsPage() {
         />
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function MediaReportsPage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-96">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
+      </DashboardLayout>
+    }>
+      <MediaReportsContent />
+    </Suspense>
   );
 }

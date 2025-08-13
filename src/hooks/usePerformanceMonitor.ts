@@ -104,7 +104,8 @@ export function useWebVitals() {
           }
           
           if (entry.entryType === 'first-input') {
-            const fid = entry.processingStart - entry.startTime;
+            const fidEntry = entry as any; // PerformanceEventTiming not available in all TypeScript versions
+            const fid = fidEntry.processingStart - entry.startTime;
           }
         }
       });

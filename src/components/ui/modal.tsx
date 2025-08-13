@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react'
+import { X, CheckCircle2, AlertCircle, Info, AlertTriangle } from 'lucide-react'
 
 interface ModalProps {
   isOpen: boolean
@@ -71,7 +71,7 @@ export function NotificationModal({
   confirmText = 'OK' 
 }: NotificationModalProps) {
   const iconMap = {
-    success: <CheckCircle className="h-12 w-12 text-green-500" />,
+    success: <CheckCircle2 className="h-12 w-12 text-green-500" />,
     error: <AlertCircle className="h-12 w-12 text-red-500" />,
     warning: <AlertTriangle className="h-12 w-12 text-yellow-500" />,
     info: <Info className="h-12 w-12 text-blue-500" />

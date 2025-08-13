@@ -51,8 +51,8 @@ export function registerServiceWorker() {
       // Trigger background sync if supported
       if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
         navigator.serviceWorker.ready.then(registration => {
-          return registration.sync.register('background-sync');
-        });
+          return (registration as any).sync.register('background-sync');
+        }).catch(console.warn);
       }
     });
 

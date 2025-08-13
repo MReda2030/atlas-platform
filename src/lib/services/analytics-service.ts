@@ -142,7 +142,7 @@ export class AnalyticsService {
         report.mediaCountryData.forEach(countryData => {
           countryData.mediaAgentData.forEach(agentData => {
             agentData.campaignDetails.forEach(campaign => {
-              totalSpend += campaign.amount;
+              totalSpend += Number(campaign.amount);
             });
           });
         });
@@ -294,7 +294,7 @@ export class AnalyticsService {
         include: {
           mediaCountryData: {
             where: {
-              mediaReport: {
+              report: {
                 date: {
                   gte: filters.startDate,
                   lte: filters.endDate,
@@ -323,7 +323,7 @@ export class AnalyticsService {
           },
           salesCountryData: {
             where: {
-              salesReport: {
+              report: {
                 date: {
                   gte: filters.startDate,
                   lte: filters.endDate,
@@ -351,13 +351,13 @@ export class AnalyticsService {
         country.mediaCountryData.forEach(mcd => {
           mcd.mediaAgentData.forEach(mad => {
             mad.campaignDetails.forEach(cd => {
-              totalSpend += cd.amount;
+              totalSpend += Number(cd.amount);
               
-              const platformName = cd.platform.name;
+              const platformName = cd.platform?.name || 'Unknown';
               if (!platformSpend[platformName]) {
                 platformSpend[platformName] = { spend: 0, deals: 0 };
               }
-              platformSpend[platformName].spend += cd.amount;
+              platformSpend[platformName].spend += Number(cd.amount);
             });
           });
         });
@@ -372,7 +372,7 @@ export class AnalyticsService {
           totalMessages += scd.whatsappMessages;
 
           scd.dealDestinations.forEach(dd => {
-            const destName = dd.destinationCountry.name;
+            const destName = dd.destinationCountry?.name || 'Unknown';
             destinations[destName] = (destinations[destName] || 0) + 1;
           });
         });
@@ -431,28 +431,13 @@ export class AnalyticsService {
       const platforms = await prisma.advertisingPlatform.findMany({
         include: {
           campaignDetails: {
-            where: {
-              mediaAgentData: {
-                mediaCountryData: {
-                  mediaReport: {
-                    date: {
-                      gte: filters.startDate,
-                      lte: filters.endDate,
-                    },
-                    ...(filters.branchId && { branchId: filters.branchId }),
-                  },
-                },
-              },
-              ...(filters.agentId && { 
-                mediaAgentData: { salesAgentId: filters.agentId }
-              }),
-            },
             include: {
-              mediaAgentData: {
+              agentData: {
                 include: {
-                  mediaCountryData: {
+                  countryData: {
                     include: {
                       targetCountry: true,
+                      report: true,
                     },
                   },
                 },
@@ -469,11 +454,25 @@ export class AnalyticsService {
         const countrySpend: Record<string, number> = {};
 
         platform.campaignDetails.forEach(cd => {
-          totalSpend += cd.amount;
+          // Filter by date range and other filters
+          const report = cd.agentData.countryData.report;
+          if (report.date < filters.startDate || report.date > filters.endDate) {
+            return;
+          }
           
-          const countryName = cd.mediaAgentData.mediaCountryData.targetCountry.name;
+          if (filters.branchId && report.branchId !== filters.branchId) {
+            return;
+          }
+          
+          if (filters.agentId && cd.agentData.salesAgentId !== filters.agentId) {
+            return;
+          }
+          
+          totalSpend += Number(cd.amount);
+          
+          const countryName = cd.agentData.countryData.targetCountry?.name || 'Unknown';
           countries.add(countryName);
-          countrySpend[countryName] = (countrySpend[countryName] || 0) + cd.amount;
+          countrySpend[countryName] = (countrySpend[countryName] || 0) + Number(cd.amount);
         });
 
         // TODO: Get actual deals attributed to this platform

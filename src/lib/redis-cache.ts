@@ -21,8 +21,7 @@ class RedisCache {
         url: redisUrl,
         socket: {
           connectTimeout: 5000,
-          lazyConnect: true,
-          keepAlive: true,
+          keepAlive: 30000, // Keep alive for 30 seconds
           reconnectStrategy: (retries) => {
             // Exponential backoff with max delay of 5 seconds
             const delay = Math.min(retries * 50, 5000);
@@ -33,8 +32,7 @@ class RedisCache {
         // Connection pooling settings
         database: 0,
         // Add connection pool settings for better performance
-        commandsQueueMaxLength: 100,
-        lazyConnect: true
+        commandsQueueMaxLength: 100
       });
 
       this.client.on('error', (err: Error) => {

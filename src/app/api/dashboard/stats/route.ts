@@ -51,18 +51,7 @@ async function getDashboardStats(user: any, filters: any) {
     // Optimized single aggregation query with grouping - much more efficient
     const [spendStats, dealsStats, campaignCounts] = await Promise.all([
       // Combined spend aggregation for both periods
-      prisma.campaignDetail.groupBy({
-        by: [],
-        _sum: { amount: true },
-        _count: { id: true },
-        where: {
-          ...userFilter,
-          createdAt: {
-            gte: previousMonth,
-            lte: currentMonthEnd
-          }
-        }
-      }).then(results => {
+      Promise.resolve().then(async () => {
         // Separate current and previous month data in application
         return Promise.all([
           prisma.campaignDetail.aggregate({

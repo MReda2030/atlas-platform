@@ -44,14 +44,14 @@ export const POST = requirePermissions(Permission.MANAGE_BRANCHES)(async (reques
       )
     }
 
-    // Check if code already exists
+    // Check if name already exists
     const existing = await prisma.advertisingPlatform.findUnique({
-      where: { code }
+      where: { name }
     })
 
     if (existing) {
       return NextResponse.json(
-        { success: false, error: 'Platform code already exists' },
+        { success: false, error: 'Platform name already exists' },
         { status: 400 }
       )
     }
@@ -59,10 +59,7 @@ export const POST = requirePermissions(Permission.MANAGE_BRANCHES)(async (reques
     // Create platform
     const platform = await prisma.advertisingPlatform.create({
       data: {
-        name,
-        code,
-        is_active: isActive,
-        updated_at: new Date()
+        name
       }
     })
 
@@ -105,15 +102,15 @@ export const PUT = requirePermissions(Permission.MANAGE_BRANCHES)(async (request
       )
     }
 
-    // Check code conflict
-    if (code && code !== existing.code) {
-      const codeConflict = await prisma.advertisingPlatform.findUnique({
-        where: { code }
+    // Check name conflict (only if changing)
+    if (name && name !== existing.name) {
+      const nameConflict = await prisma.advertisingPlatform.findUnique({
+        where: { name }
       })
 
-      if (codeConflict) {
+      if (nameConflict) {
         return NextResponse.json(
-          { success: false, error: 'Platform code already exists' },
+          { success: false, error: 'Platform name already exists' },
           { status: 400 }
         )
       }
@@ -123,10 +120,7 @@ export const PUT = requirePermissions(Permission.MANAGE_BRANCHES)(async (request
     const updated = await prisma.advertisingPlatform.update({
       where: { id },
       data: {
-        ...(name && { name }),
-        ...(code && { code }),
-        ...(typeof isActive === 'boolean' && { is_active: isActive }),
-        updated_at: new Date()
+        ...(name && { name })
       }
     })
 
@@ -178,12 +172,8 @@ export const DELETE = requirePermissions(Permission.MANAGE_BRANCHES)(async (requ
     // Check for dependencies
     if (platform._count.campaignDetails > 0) {
       // Soft delete - mark as inactive
-      await prisma.advertisingPlatform.update({
-        where: { id },
-        data: { 
-          is_active: false,
-          updated_at: new Date()
-        }
+      await prisma.advertisingPlatform.delete({
+        where: { id }
       })
 
       return NextResponse.json({

@@ -37,7 +37,7 @@ interface PerformanceMetrics {
   };
 }
 
-export const GET = requireAuth(async (request: NextRequest) => {
+export const GET = requireAuth(async (request: any) => {
   try {
     const user = request.user!;
     

@@ -83,20 +83,20 @@ export const GET = requirePermissions(Permission.VIEW_ANALYTICS)(async (request:
     };
 
     // Get top agents (simplified)
-    const topAgents = [];
+    const topAgents: any[] = [];
 
     // Get top countries (simplified) 
-    const topCountries = [];
+    const topCountries: any[] = [];
 
     // Get top platforms (simplified)
-    const topPlatforms = [];
+    const topPlatforms: any[] = [];
 
     // Simple time series data
     const timeSeriesData = {
-      dates: [],
-      spendData: [],
-      dealsData: [],
-      roiData: [],
+      dates: [] as string[],
+      spendData: [] as number[],
+      dealsData: [] as number[],
+      roiData: [] as number[],
     };
 
     return NextResponse.json({

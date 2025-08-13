@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { User } from '@/contexts/AuthContext'
+import { UserRole } from '@/lib/auth/roles-permissions'
 
 export function getUserFromRequest(request: NextRequest): User | null {
   try {
@@ -25,7 +26,7 @@ export function requireAdmin(request: NextRequest): { user: User } | { error: st
     return { error: 'Authentication required' }
   }
   
-  if (user.role !== 'admin') {
+  if (user.role !== UserRole.ADMIN) {
     return { error: 'Admin access required' }
   }
   
@@ -59,5 +60,5 @@ export function getClientUser(): User | null {
 
 export function isClientAdmin(): boolean {
   const user = getClientUser()
-  return user?.role === 'admin'
+  return user?.role === UserRole.ADMIN
 }

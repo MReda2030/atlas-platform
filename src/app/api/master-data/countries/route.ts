@@ -105,8 +105,7 @@ export const POST = requirePermissions(Permission.MANAGE_BRANCHES)(async (reques
       const country = await prisma.targetCountry.create({
         data: {
           name,
-          code,
-          updated_at: new Date()
+          code
         }
       })
 
@@ -131,8 +130,7 @@ export const POST = requirePermissions(Permission.MANAGE_BRANCHES)(async (reques
       const country = await prisma.destinationCountry.create({
         data: {
           name,
-          code,
-          updated_at: new Date()
+          code
         }
       })
 

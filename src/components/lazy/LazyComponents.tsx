@@ -113,7 +113,7 @@ export const LazyDataTable = dynamic(
 
 // Heavy form components
 export const LazyMediaReportForm = dynamic(
-  () => import('@/app/media/components/MediaReportForm'),
+  () => import('@/components/forms/media-report-form'),
   {
     loading: () => (
       <div className="space-y-6">

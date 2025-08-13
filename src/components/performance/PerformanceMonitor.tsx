@@ -74,7 +74,7 @@ export function PerformanceMonitor() {
         }
 
         const newMetrics: PerformanceMetrics = {
-          navigationTiming: navigationEntry ? navigationEntry.loadEventEnd - navigationEntry.navigationStart : 0,
+          navigationTiming: navigationEntry ? navigationEntry.loadEventEnd - navigationEntry.startTime : 0,
           apiResponseTimes,
           memoryUsage,
           cacheHitRate: serverMetrics?.cache.hitRate || Math.random() * 100,

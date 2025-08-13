@@ -76,13 +76,12 @@ export class AuthService {
         name: creator.name,
         role: creator.role as UserRole,
         branchId: creator.branchId || undefined,
-        agentNumber: creator.agentNumber || undefined,
         permissions: PermissionService.getUserPermissions(creator.role as UserRole),
-        isActive: creator.isActive,
-        createdAt: creator.createdAt,
-        updatedAt: creator.updatedAt,
+        isActive: creator.isActive ?? true,
+        createdAt: creator.createdAt || new Date(),
+        updatedAt: creator.updatedAt || new Date(),
         lastLoginAt: creator.lastLoginAt || undefined,
-        createdBy: creator.createdBy,
+        createdBy: 'system', // Placeholder since this field doesn't exist in the User model
       };
 
       const roleValidation = PermissionService.validateRoleAssignment(
@@ -107,10 +106,8 @@ export class AuthService {
           email: userData.email,
           passwordHash,
           name: userData.name,
-          role: userData.role,
+          role: userData.role as any, // Cast to handle enum type
           branchId: userData.branchId,
-          agentNumber: userData.agentNumber,
-          createdBy: userData.createdBy,
         },
         include: {
           branch: true,
@@ -140,12 +137,11 @@ export class AuthService {
         name: newUser.name,
         role: newUser.role as UserRole,
         branchId: newUser.branchId || undefined,
-        agentNumber: newUser.agentNumber || undefined,
         permissions: PermissionService.getUserPermissions(newUser.role as UserRole),
-        isActive: newUser.isActive,
-        createdAt: newUser.createdAt,
-        updatedAt: newUser.updatedAt,
-        createdBy: newUser.createdBy,
+        isActive: newUser.isActive ?? true,
+        createdAt: newUser.createdAt || new Date(),
+        updatedAt: newUser.updatedAt || new Date(),
+        createdBy: 'system', // Placeholder since this field doesn't exist in the User model
       };
 
       return {
@@ -228,8 +224,8 @@ export class AuthService {
           role: user.role,
           sessionId: sessionId
         },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
+        JWT_SECRET as string,
+        { expiresIn: JWT_EXPIRES_IN } as any
       );
 
       // Store session with the same token that will be returned to client
@@ -261,13 +257,12 @@ export class AuthService {
         name: user.name,
         role: user.role as UserRole,
         branchId: user.branchId || undefined,
-        agentNumber: user.agentNumber || undefined,
         permissions: PermissionService.getUserPermissions(user.role as UserRole),
-        isActive: user.isActive,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+        isActive: user.isActive ?? true,
+        createdAt: user.createdAt || new Date(),
+        updatedAt: user.updatedAt || new Date(),
         lastLoginAt: user.lastLoginAt || undefined,
-        createdBy: user.createdBy,
+        createdBy: 'system', // Placeholder since this field doesn't exist in the User model
       };
 
       return {
@@ -291,7 +286,7 @@ export class AuthService {
    */
   static async logout(token: string, ipAddress?: string, userAgent?: string): Promise<{ success: boolean; message: string }> {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      const decoded = jwt.verify(token, JWT_SECRET as string) as any;
       
       // Remove session
       await prisma.userSession.delete({
@@ -327,7 +322,7 @@ export class AuthService {
    */
   static async verifyToken(token: string): Promise<UserProfile | null> {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      const decoded = jwt.verify(token, JWT_SECRET as string) as any;
 
       // Check if session still exists
       const session = await prisma.userSession.findUnique({
@@ -351,13 +346,12 @@ export class AuthService {
         name: user.name,
         role: user.role as UserRole,
         branchId: user.branchId || undefined,
-        agentNumber: user.agentNumber || undefined,
         permissions: PermissionService.getUserPermissions(user.role as UserRole),
-        isActive: user.isActive,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+        isActive: user.isActive ?? true,
+        createdAt: user.createdAt || new Date(),
+        updatedAt: user.updatedAt || new Date(),
         lastLoginAt: user.lastLoginAt || undefined,
-        createdBy: user.createdBy,
+        createdBy: 'system', // Placeholder since this field doesn't exist in the User model
       };
 
     } catch (error) {
@@ -377,8 +371,8 @@ export class AuthService {
             userId: sessionInfo.userId,
             sessionId: sessionInfo.sessionId 
           },
-          JWT_SECRET,
-          { expiresIn: JWT_EXPIRES_IN }
+          JWT_SECRET as string,
+          { expiresIn: JWT_EXPIRES_IN } as any
         ),
         expiresAt: sessionInfo.expiresAt,
         ipAddress: sessionInfo.ipAddress,

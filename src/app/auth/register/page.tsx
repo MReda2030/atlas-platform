@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select } from '@/components/ui/select'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { useAuth } from '@/contexts/AuthContext'
-import { UserPlus, AlertCircle, CheckCircle, ArrowLeft, Eye, EyeOff } from 'lucide-react'
+import { UserPlus, AlertCircle, CheckCircle2, ArrowLeft, Eye, EyeOff } from 'lucide-react'
 
 interface Branch {
   id: string
@@ -196,7 +196,7 @@ export default function RegisterPage() {
               {success && (
                 <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                   <div className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
                     <div>
                       <p className="font-medium text-green-800 dark:text-green-400">
                         User registered successfully!

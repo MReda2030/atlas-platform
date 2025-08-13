@@ -10,7 +10,7 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  role: z.enum(['ADMIN', 'MEDIA_BUYER'], 'Invalid role'),
+  role: z.enum(['ADMIN', 'MEDIA_BUYER'], { errorMap: () => ({ message: 'Invalid role' }) }),
   branchId: z.string().optional()
 }).refine((data) => {
   // Media buyers should not have branchId
@@ -107,7 +107,6 @@ export async function POST(request: NextRequest) {
         role: role as any,
         branchId: finalBranchId, // null for media buyers, branchId for admins
         isActive: true,
-        createdBy: adminUser.id,
       },
       include: {
         branch: {

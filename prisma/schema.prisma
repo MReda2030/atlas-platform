@@ -245,7 +245,11 @@ model DealDestination {
 enum UserRole {
   SUPER_ADMIN
   ADMIN
+  BRANCH_MANAGER
   MEDIA_BUYER
+  SALES_AGENT
+  ANALYST
+  VIEWER
 
   @@map("user_role")
 }

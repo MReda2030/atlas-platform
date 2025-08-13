@@ -5,7 +5,10 @@ export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
   BRANCH_MANAGER = 'BRANCH_MANAGER',
-  MEDIA_BUYER = 'MEDIA_BUYER'
+  MEDIA_BUYER = 'MEDIA_BUYER',
+  SALES_AGENT = 'SALES_AGENT',
+  ANALYST = 'ANALYST',
+  VIEWER = 'VIEWER'
 }
 
 export enum Permission {
@@ -157,6 +160,30 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.EDIT_SALES_REPORTS, // Limited to own reports
     Permission.VIEW_ANALYTICS, // Limited to own data
     Permission.EXPORT_DATA, // Limited to own data
+  ],
+
+  [UserRole.SALES_AGENT]: [
+    // Sales agent - limited to sales reports
+    Permission.CREATE_SALES_REPORTS,
+    Permission.VIEW_SALES_REPORTS, // Limited to own reports
+    Permission.EDIT_SALES_REPORTS, // Limited to own reports
+    Permission.VIEW_ANALYTICS, // Limited to own performance
+  ],
+
+  [UserRole.ANALYST]: [
+    // Analyst - read-only access to analytics
+    Permission.VIEW_MEDIA_REPORTS,
+    Permission.VIEW_SALES_REPORTS,
+    Permission.VIEW_ANALYTICS,
+    Permission.VIEW_DETAILED_ANALYTICS,
+    Permission.VIEW_FINANCIAL_METRICS,
+    Permission.EXPORT_ANALYTICS,
+    Permission.EXPORT_DATA,
+  ],
+
+  [UserRole.VIEWER]: [
+    // Viewer - minimal read-only access
+    Permission.VIEW_ANALYTICS,
   ],
 };
 

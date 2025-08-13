@@ -77,10 +77,9 @@ export const GET = requirePermissions([Permission.MANAGE_USERS, Permission.VIEW_
         role: user.role,
         branchId: user.branchId,
         branchName: user.branch?.name,
-        agentNumber: user.agentNumber,
         isActive: user.isActive,
-        createdAt: user.createdAt.toISOString(),
-        updatedAt: user.updatedAt.toISOString(),
+        createdAt: user.createdAt?.toISOString() || new Date().toISOString(),
+        updatedAt: user.updatedAt?.toISOString() || new Date().toISOString(),
         lastLoginAt: user.lastLoginAt?.toISOString(),
       }));
 
@@ -143,7 +142,6 @@ export const POST = requirePermissions(Permission.MANAGE_USERS)(
         name,
         role,
         branchId,
-        agentNumber,
       } = body;
 
       // Validation
@@ -179,30 +177,8 @@ export const POST = requirePermissions(Permission.MANAGE_USERS)(
         );
       }
 
-      // Sales agent validation
-      if (role === UserRole.SALES_AGENT) {
-        if (!agentNumber) {
-          return NextResponse.json(
-            { message: 'Agent number is required for sales agents' },
-            { status: 400 }
-          );
-        }
-
-        // Check if agent number already exists
-        const existingAgent = await prisma.user.findFirst({
-          where: {
-            agentNumber,
-            role: UserRole.SALES_AGENT,
-          },
-        });
-
-        if (existingAgent) {
-          return NextResponse.json(
-            { message: `Agent number ${agentNumber} is already assigned` },
-            { status: 400 }
-          );
-        }
-      }
+      // Sales agent validation - will be handled separately if needed
+      // Agent numbers are tracked in the sales_agents table, not users table
 
       // Branch-specific roles validation
       const branchRequiredRoles = [
@@ -232,7 +208,6 @@ export const POST = requirePermissions(Permission.MANAGE_USERS)(
           name: name.trim(),
           role,
           branchId,
-          agentNumber,
           createdBy: currentUser.id,
         },
         ipAddress,
