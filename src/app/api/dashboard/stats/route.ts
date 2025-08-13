@@ -28,105 +28,215 @@ async function getDashboardStats(user: any, filters: any) {
     const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
     const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    
+    // For admins, show all-time data if current month has no data
+    // For media buyers, still restrict to current month
+    const isAdmin = user.role === 'SUPER_ADMIN' || user.role === 'ADMIN'
 
-    // Create filters based on user role
-    // Admin/Super Admin see all data, Media Buyers see only their own
+    // For admins, get all data. For media buyers, filter by their data
+    // Filter by report date in current month (August 2025)
+    const reportDateFilter = {
+      gte: currentMonth,
+      lte: currentMonthEnd
+    };
+
+    // Create filters based on user role - filter by report date
     const userFilter = filters.restrictToOwn ? {
       agentData: {
         countryData: {
           report: {
-            mediaBuyerId: user.id
+            mediaBuyerId: user.id,
+            date: reportDateFilter
           }
         }
       }
-    } : {}; // Empty filter for admins = see all data
+    } : {
+      agentData: {
+        countryData: {
+          report: {
+            date: reportDateFilter
+          }
+        }
+      }
+    };
 
-    // Create sales filter based on user role
+    // Create sales filter based on user role - filter by report date
     const salesUserFilter = filters.restrictToOwn ? {
       report: {
-        mediaBuyerId: user.id
+        mediaBuyerId: user.id,
+        date: reportDateFilter
       }
-    } : {}; // Empty filter for admins = see all data
+    } : {
+      report: {
+        date: reportDateFilter
+      }
+    };
 
-    // Optimized single aggregation query with grouping - much more efficient
-    const [spendStats, dealsStats, campaignCounts] = await Promise.all([
-      // Combined spend aggregation for both periods
-      Promise.resolve().then(async () => {
-        // Separate current and previous month data in application
-        return Promise.all([
-          prisma.campaignDetail.aggregate({
-            _sum: { amount: true },
-            where: {
-              ...userFilter,
-              createdAt: {
-                gte: currentMonth,
-                lte: currentMonthEnd
-              }
-            }
-          }),
-          prisma.campaignDetail.aggregate({
-            _sum: { amount: true },
-            where: {
-              ...userFilter,
-              createdAt: {
-                gte: previousMonth,
-                lt: currentMonth
-              }
-            }
-          })
-        ]);
-      }).catch(() => [{ _sum: { amount: 0 } }, { _sum: { amount: 0 } }]),
-
-      // Combined deals aggregation for both periods
-      Promise.all([
-        prisma.salesCountryData.aggregate({
-          _sum: { dealsClosed: true },
-          where: {
-            ...salesUserFilter,
-            createdAt: {
-              gte: currentMonth,
-              lte: currentMonthEnd
-            }
-          }
-        }),
-        prisma.salesCountryData.aggregate({
-          _sum: { dealsClosed: true },
-          where: {
-            ...salesUserFilter,
-            createdAt: {
-              gte: previousMonth,
-              lt: currentMonth
-            }
-          }
-        })
-      ]).catch(() => [{ _sum: { dealsClosed: 0 } }, { _sum: { dealsClosed: 0 } }]),
-
-      // Campaign counts for conversion rate calculation
-      Promise.all([
-        prisma.campaignDetail.count({
-          where: {
-            ...userFilter,
-            createdAt: {
-              gte: currentMonth,
-              lte: currentMonthEnd
-            }
-          }
-        }),
-        prisma.campaignDetail.count({
-          where: {
-            ...userFilter,
-            createdAt: {
-              gte: previousMonth,
-              lt: currentMonth
-            }
-          }
-        })
-      ]).catch(() => [0, 0])
+    // Get current month data directly from related tables (already filtered by report date)
+    let [currentSpendResult, currentDealsResult, currentCampaignCount] = await Promise.all([
+      // Get campaign details data
+      prisma.campaignDetail.aggregate({
+        _sum: { amount: true },
+        where: userFilter
+      }).catch(() => ({ _sum: { amount: null } })),
+      
+      // Get sales country data  
+      prisma.salesCountryData.aggregate({
+        _sum: { dealsClosed: true },
+        where: salesUserFilter
+      }).catch(() => ({ _sum: { dealsClosed: null } })),
+      
+      // Count campaigns
+      prisma.campaignDetail.count({
+        where: userFilter
+      }).catch(() => 0)
     ]);
 
-    const [totalSpendResult, previousSpendResult] = spendStats;
-    const [totalDealsResult, previousDealsResult] = dealsStats;
-    const [totalCampaigns, previousCampaigns] = campaignCounts;
+    // If no detailed data, fall back to summary fields in reports
+    if (!currentSpendResult._sum.amount) {
+      const mediaReportFilter = filters.restrictToOwn ? {
+        mediaBuyerId: user.id,
+        date: {
+          gte: currentMonth,
+          lte: currentMonthEnd
+        }
+      } : {
+        date: {
+          gte: currentMonth,
+          lte: currentMonthEnd
+        }
+      };
+
+      const fallbackSpend = await prisma.mediaReport.aggregate({
+        _sum: { total_spend: true },
+        where: mediaReportFilter
+      }).catch(() => ({ _sum: { total_spend: null } }));
+      
+      if (fallbackSpend._sum.total_spend) {
+        currentSpendResult = { _sum: { amount: fallbackSpend._sum.total_spend } };
+      }
+    }
+
+    if (!currentDealsResult._sum.dealsClosed) {
+      const salesReportFilter = filters.restrictToOwn ? {
+        mediaBuyerId: user.id,
+        date: {
+          gte: currentMonth,
+          lte: currentMonthEnd
+        }
+      } : {
+        date: {
+          gte: currentMonth,
+          lte: currentMonthEnd
+        }
+      };
+
+      const fallbackDeals = await prisma.salesReport.aggregate({
+        _sum: { total_deals: true },
+        where: salesReportFilter
+      }).catch(() => ({ _sum: { total_deals: null } }));
+      
+      if (fallbackDeals._sum.total_deals) {
+        currentDealsResult = { _sum: { dealsClosed: fallbackDeals._sum.total_deals } };
+      }
+    }
+
+    console.log('Dashboard Debug - Current spend:', currentSpendResult._sum.amount);
+    console.log('Dashboard Debug - Current deals:', currentDealsResult._sum.dealsClosed);
+    console.log('Dashboard Debug - Campaign count:', currentCampaignCount);
+    console.log('Dashboard Debug - User role:', user.role);
+    console.log('Dashboard Debug - Is admin:', isAdmin);
+    console.log('Dashboard Debug - Restrict to own:', filters.restrictToOwn);
+
+    // Check if current month has any data
+    const hasCurrentData = (currentSpendResult._sum.amount || 0) > 0 || 
+                          (currentDealsResult._sum.dealsClosed || 0) > 0 || 
+                          currentCampaignCount > 0;
+
+    console.log('Dashboard Debug - Has current data:', hasCurrentData);
+
+    // If admin has no current month data, get all-time data
+    if (isAdmin && !hasCurrentData) {
+      console.log('Admin with no current month data - fetching all-time data');
+      
+      // Remove date filters for all-time data
+      const allTimeUserFilter = filters.restrictToOwn ? {
+        agentData: {
+          countryData: {
+            report: {
+              mediaBuyerId: user.id
+            }
+          }
+        }
+      } : {};
+
+      const allTimeSalesUserFilter = filters.restrictToOwn ? {
+        report: {
+          mediaBuyerId: user.id
+        }
+      } : {};
+      
+      // Get all-time detailed data
+      [currentSpendResult, currentDealsResult, currentCampaignCount] = await Promise.all([
+        prisma.campaignDetail.aggregate({
+          _sum: { amount: true },
+          where: allTimeUserFilter
+        }).catch(() => ({ _sum: { amount: null } })),
+        
+        prisma.salesCountryData.aggregate({
+          _sum: { dealsClosed: true },
+          where: allTimeSalesUserFilter
+        }).catch(() => ({ _sum: { dealsClosed: null } })),
+        
+        prisma.campaignDetail.count({
+          where: allTimeUserFilter
+        }).catch(() => 0)
+      ]);
+
+      console.log('Dashboard Debug - All-time spend:', currentSpendResult._sum.amount);
+      console.log('Dashboard Debug - All-time deals:', currentDealsResult._sum.dealsClosed);
+    }
+
+    // Get previous period data (always previous month for comparison)
+    const [previousSpendResult, previousDealsResult, previousCampaignCount] = await Promise.all([
+      prisma.campaignDetail.aggregate({
+        _sum: { amount: true },
+        where: {
+          ...userFilter,
+          createdAt: {
+            gte: previousMonth,
+            lt: currentMonth
+          }
+        }
+      }).catch(() => ({ _sum: { amount: 0 } })),
+      
+      prisma.salesCountryData.aggregate({
+        _sum: { dealsClosed: true },
+        where: {
+          ...salesUserFilter,
+          createdAt: {
+            gte: previousMonth,
+            lt: currentMonth
+          }
+        }
+      }).catch(() => ({ _sum: { dealsClosed: 0 } })),
+      
+      prisma.campaignDetail.count({
+        where: {
+          ...userFilter,
+          createdAt: {
+            gte: previousMonth,
+            lt: currentMonth
+          }
+        }
+      }).catch(() => 0)
+    ]);
+
+    // Assign results for processing
+    const totalSpendResult = currentSpendResult;
+    const totalDealsResult = currentDealsResult;
+    const totalCampaigns = currentCampaignCount;
+    const previousCampaigns = previousCampaignCount;
 
     const totalSpend = Number(totalSpendResult._sum.amount) || 0
     const previousSpend = Number(previousSpendResult._sum.amount) || 0
@@ -155,12 +265,17 @@ async function getDashboardStats(user: any, filters: any) {
     let topAgentDeals = 0
 
     try {
-      const whereCondition: any = {
-        date: {
+      // Use same date logic as above - all-time for admins with no current data
+      const whereCondition: any = {};
+      
+      if (!isAdmin || hasCurrentData) {
+        // Use current month filtering for non-admins or admins with current data
+        whereCondition.date = {
           gte: currentMonth,
           lte: currentMonthEnd
-        }
-      };
+        };
+      }
+      // For admins with no current data, no date filter = all-time
       
       // Add user filter only for media buyers
       if (filters.restrictToOwn) {
@@ -193,14 +308,19 @@ async function getDashboardStats(user: any, filters: any) {
     let topCountryConversion = 0
 
     try {
+      const countryWhereCondition: any = { ...salesUserFilter };
+      
+      if (!isAdmin || hasCurrentData) {
+        // Use current month filtering for non-admins or admins with current data
+        countryWhereCondition.createdAt = {
+          gte: currentMonth,
+          lte: currentMonthEnd
+        };
+      }
+      // For admins with no current data, no date filter = all-time
+      
       const topCountryData = await prisma.salesCountryData.findFirst({
-        where: {
-          ...salesUserFilter,
-          createdAt: {
-            gte: currentMonth,
-            lte: currentMonthEnd
-          }
-        },
+        where: countryWhereCondition,
         include: {
           targetCountry: true
         },
@@ -222,14 +342,19 @@ async function getDashboardStats(user: any, filters: any) {
     let topPlatformCPA = 0
 
     try {
+      const platformWhereCondition: any = { ...userFilter };
+      
+      if (!isAdmin || hasCurrentData) {
+        // Use current month filtering for non-admins or admins with current data
+        platformWhereCondition.createdAt = {
+          gte: currentMonth,
+          lte: currentMonthEnd
+        };
+      }
+      // For admins with no current data, no date filter = all-time
+      
       const topPlatformData = await prisma.campaignDetail.findFirst({
-        where: {
-          ...userFilter,
-          createdAt: {
-            gte: currentMonth,
-            lte: currentMonthEnd
-          }
-        },
+        where: platformWhereCondition,
         include: {
           platform: true
         },
