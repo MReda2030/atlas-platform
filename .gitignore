@@ -127,3 +127,6 @@ secrets/
 
 # Local development
 .env.example.local
+
+# TypeScript
+*.tsbuildinfo
