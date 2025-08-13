@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(npm run dev:*)",
+      "WebFetch(domain:atlas-platform-7n50zpovx-mohamed-redas-projects-35480832.vercel.app)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

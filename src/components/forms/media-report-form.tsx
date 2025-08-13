@@ -75,7 +75,19 @@ export default function MediaReportForm({ onSubmit, onCancel, showError }: Media
   }, [clearAutoSave]);
 
   const handleStepSubmit = useCallback((stepData: any) => {
-    setFormData(prev => ({ ...prev, ...stepData }));
+    setFormData(prev => {
+      const updatedData = { ...prev, ...stepData };
+      
+      // Handle final submission in the callback to avoid stale closure
+      if (currentStep === 'review') {
+        setTimeout(() => {
+          clearAutoSave();
+          onSubmit?.(updatedData);
+        }, 0);
+      }
+      
+      return updatedData;
+    });
     
     switch (currentStep) {
       case 'metadata':
@@ -90,12 +102,8 @@ export default function MediaReportForm({ onSubmit, onCancel, showError }: Media
       case 'campaigns':
         setCurrentStep('review');
         break;
-      case 'review':
-        clearAutoSave(); // Clear auto-save on successful submission
-        onSubmit?.(formData);
-        break;
     }
-  }, [currentStep, formData, clearAutoSave, onSubmit]);
+  }, [currentStep, clearAutoSave, onSubmit]);
 
   const renderStepContent = () => {
     switch (currentStep) {
