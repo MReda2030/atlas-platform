@@ -93,7 +93,7 @@ async function getDashboardStats(user: any, filters: any) {
     ]);
 
     // If no detailed data, fall back to summary fields in reports
-    if (!currentSpendResult._sum.amount) {
+    if (!Number(currentSpendResult._sum.amount)) {
       const mediaReportFilter = filters.restrictToOwn ? {
         mediaBuyerId: user.id,
         date: {
@@ -117,7 +117,7 @@ async function getDashboardStats(user: any, filters: any) {
       }
     }
 
-    if (!currentDealsResult._sum.dealsClosed) {
+    if (!Number(currentDealsResult._sum.dealsClosed)) {
       const salesReportFilter = filters.restrictToOwn ? {
         mediaBuyerId: user.id,
         date: {
@@ -149,7 +149,7 @@ async function getDashboardStats(user: any, filters: any) {
     console.log('Dashboard Debug - Restrict to own:', filters.restrictToOwn);
 
     // Check if current month has any data
-    const hasCurrentData = (currentSpendResult._sum.amount || 0) > 0 || 
+    const hasCurrentData = (Number(currentSpendResult._sum.amount) || 0) > 0 || 
                           (currentDealsResult._sum.dealsClosed || 0) > 0 || 
                           currentCampaignCount > 0;
 
