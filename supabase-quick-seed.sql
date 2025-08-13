@@ -65,8 +65,8 @@ WITH agent_data AS (
     unnest(ARRAY['51','52','53','54','55','56','57','58','59','60','61','62']) as agent_number,
     (SELECT id FROM branches WHERE name = 'Skyline') as branch_id
 )
-INSERT INTO sales_agents (id, agent_number, name, branch_id, is_active, created_at, updated_at)
-SELECT id, agent_number, 'Agent ' || agent_number, branch_id, true, NOW(), NOW()
+INSERT INTO sales_agents (id, agent_number, name, branch_id, is_active, created_at)
+SELECT id, agent_number, 'Agent ' || agent_number, branch_id, true, NOW()
 FROM agent_data
 ON CONFLICT (agent_number) DO NOTHING;
 
