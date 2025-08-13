@@ -23,10 +23,10 @@ export const TARGET_COUNTRIES = [
 ] as const;
 
 export const BRANCHES = [
-  { code: '4S', name: '4 Seasons' },
-  { code: 'AMZ', name: 'Amazonn' },
-  { code: 'FAN', name: 'Fantastic' },
-  { code: 'SKY', name: 'Skyline' },
+  { code: '4SEASONS', name: '4 Seasons' },
+  { code: 'AMAZONN', name: 'Amazonn' },
+  { code: 'FANTASTIC', name: 'Fantastic' },
+  { code: 'SKYLINE', name: 'Skyline' },
 ] as const;
 
 export const ADVERTISING_PLATFORMS = [
